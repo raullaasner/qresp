@@ -7,7 +7,7 @@ from flask_wtf import CSRFProtect
 from flask_sitemap import Sitemap
 import connexion
 
-HYBRID3_URL = config('HYBRID3_URL', default='')
+MATD3_URL = config('MATD3_URL', default='')
 HOST_URL = config('HOST_URL', default='')
 
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID',

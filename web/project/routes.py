@@ -303,32 +303,32 @@ def curate():
     if session.get("reference"):
         referenceForm = session.get("reference")
         referenceform = ReferenceForm(**referenceForm)
-    use_hybrid3 = 'use-hybrid3' in session
-    hybrid3_add_data_url = (f'{app.config["HYBRID3_URL"]}/materials/add-data?'
-                            f'return-url={app.config["HOST_URL"]}/hybrid3')
-    if use_hybrid3:
+    use_matd3 = 'use-matd3' in session
+    matd3_add_data_url = (f'{app.config["MATD3_URL"]}/materials/add-data?'
+                          f'return-url={app.config["HOST_URL"]}/matd3')
+    if use_matd3:
         chartform.make_fields_readonly()
-    if session.get('hybrid3-reference'):
-        hybrid3_ref = session.get('hybrid3-reference')
+    if session.get('matd3-reference'):
+        matd3_ref = session.get('matd3-reference')
         authors = [{'firstName': a['first_name'], 'lastName': a['last_name']}
-                   for a in hybrid3_ref['authors']]
+                   for a in matd3_ref['authors']]
         referenceform = ReferenceForm(
-            kind=hybrid3_ref['kind'],
-            DOI=hybrid3_ref['DOI'],
+            kind=matd3_ref['kind'],
+            DOI=matd3_ref['DOI'],
             authors=authors,
-            title=hybrid3_ref['title'],
-            page=hybrid3_ref['page'],
-            publishedAbstract=hybrid3_ref['publishedAbstract'],
-            volume=hybrid3_ref['volume'],
-            year=hybrid3_ref['year'],
-            URLs=hybrid3_ref['URLs'])
-        referenceform.journal = JournalForm(fullName=hybrid3_ref['journal'])
+            title=matd3_ref['title'],
+            page=matd3_ref['page'],
+            publishedAbstract=matd3_ref['publishedAbstract'],
+            volume=matd3_ref['volume'],
+            year=matd3_ref['year'],
+            URLs=matd3_ref['URLs'])
+        referenceform.journal = JournalForm(fullName=matd3_ref['journal'])
         referenceform.make_fields_readonly()
-        hybrid3_add_data_url = f'{hybrid3_add_data_url}&reference={hybrid3_ref["pk"]}'
+        matd3_add_data_url = f'{matd3_add_data_url}&reference={matd3_ref["pk"]}'
     return render_template('curate.html',infoform=infoform,chartlistform=chartlist,chartform=chartform,
                            toollistform=toollist,toolform=toolform,datalistform=datasetlist,datasetform=datasetform,
                            scriptlistform=scriptlist,scriptform=scriptform,referenceform=referenceform,projName=projectName,documentationform=documentationform,
-                           use_hybrid3=use_hybrid3, hybrid3_add_data_url=hybrid3_add_data_url)
+                           use_matd3=use_matd3, matd3_add_data_url=matd3_add_data_url)
 
 @csrf.exempt
 @app.route('/info', methods=['POST', 'GET'])
@@ -721,7 +721,7 @@ def download():
     notebookPath = session.get("notebookPath","")
     downloadPath = session.get("downloadPath","")
     projectName = session.get("ProjectName","")
-    if projectName and 'use-hybrid3' not in session:
+    if projectName and 'use-matd3' not in session:
         if projectName not in fileServerPath:
             fileServerPath = fileServerPath + "/" +projectName
         if projectName not in notebookPath:
@@ -990,21 +990,22 @@ def insertDOI():
     content = {'Success': 'Inserted'}
     return jsonify(content), 200
 
-@app.route('/use-hybrid3', methods=['GET'])
-def use_hybrid3():
-    """Switch on the global flag for exporting data to HybriD3."""
-    session['use-hybrid3'] = True
+
+@app.route('/use-matd3', methods=['GET'])
+def use_matd3():
+    """Switch on the global flag for exporting data to Matd3."""
+    session['use-matd3'] = True
     return redirect(url_for('curate'))
 
 
-@app.route('/hybrid3', methods=['GET'])
-def hybrid3():
-    """Fetch data from HybriD3 and prefill forms in Qresp."""
+@app.route('/matd3', methods=['GET'])
+def matd3():
+    """Fetch data from MatD3 and prefill forms in Qresp."""
     dataset = requests.get(
-        f'{app.config["HYBRID3_URL"]}/materials/datasets/'
+        f'{app.config["MATD3_URL"]}/materials/datasets/'
         f'{request.args.get("pk")}/info', verify=False).json()
     pk = dataset['pk']
-    session['fileServerPath'] = app.config['HYBRID3_URL']
+    session['fileServerPath'] = app.config['MATD3_URL']
     session['downloadPath'] = 'materials'
     if not session.get("ProjectName"):
         session['ProjectName'] = f'materials_{pk}'
@@ -1012,13 +1013,13 @@ def hybrid3():
         caption = dataset['caption']
     else:
         caption = f'dataset {pk}'
-    properties = [dataset['primary_property']]
+    properties = [dataset['primary_property']['name']]
     if dataset['primary_unit']:
-        properties[-1] += f' ({dataset["primary_unit"]})'
+        properties[-1] += f' ({dataset["primary_unit"]["label"]})'
     if dataset['secondary_property']:
-        properties.append(dataset["secondary_property"])
+        properties.append(dataset["secondary_property"]["name"])
     if dataset['secondary_unit']:
-        properties[-1] += f' ({dataset["secondary_unit"]})'
+        properties[-1] += f' ({dataset["secondary_unit"]["label"]})'
     chartList = deepcopy(session.get('charts', []))
     chartList.append({
         'id': '',
@@ -1038,9 +1039,9 @@ def hybrid3():
     })
     session['charts'] = deepcopy(chartList)
     reference = requests.get(
-        f'{app.config["HYBRID3_URL"]}/materials/references/'
-        f'{dataset["reference"]}', verify=False).json()
-    session['hybrid3-reference'] = {
+        f'{app.config["MATD3_URL"]}/materials/references/'
+        f'{dataset["reference"]["id"]}', verify=False).json()
+    session['matd3-reference'] = {
         'pk': reference['pk'],
         'kind': 'journal',
         'DOI': reference['doi_isbn'],
@@ -1058,10 +1059,10 @@ def hybrid3():
 
 @app.route('/export/<paperid>/<chart_nr>', methods=['GET'])
 def export(paperid, chart_nr):
-    """Export some of the data to HybriD3.
+    """Export some of the data to Matd3.
 
-    Since HybriD3 is a structured database (MariaDB), the user will
-    have to fill in most fields on the HybriD3 data submission
+    Since Matd3 is a structured database (MariaDB), the user will
+    have to fill in most fields on the Matd3 data submission
     webpage.
 
     """
@@ -1069,12 +1070,12 @@ def export(paperid, chart_nr):
     fetchdata = FetchDataFromAPI(selectedserver)
     paper_detail = fetchdata.fetchOutput(f'/api/paper/{paperid}')
     return_url = f'{app.config["HOST_URL"]}/paperdetails/{paperid}'
-    hybrid3_add_data_url = (
-        f'{app.config["HYBRID3_URL"]}/materials/add-data?'
+    matd3_add_data_url = (
+        f'{app.config["MATD3_URL"]}/materials/add-data?'
         f'return-url={return_url}&'
         f'qresp-fetch-url={app.config["HOST_URL"]}/get-paper-details/{paperid}'
         f'&qresp-chart-nr={int(chart_nr)-1}')
-    return redirect(hybrid3_add_data_url)
+    return redirect(matd3_add_data_url)
 
 
 @app.route('/get-paper-details/<paperid>', methods=['GET'])

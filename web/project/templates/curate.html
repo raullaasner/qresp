@@ -24,7 +24,7 @@
                         <option value="Info">Info</option>
                         <option value="Charts">Charts</option>
                         <option value="Tools">Tools</option>
-                        {% if not use_hybrid3 %}
+                        {% if not use_matd3 %}
                           <option value="Datasets">Datasets</option>
                         {% endif %}
                         <option value="Scripts">Scripts</option>
@@ -81,13 +81,13 @@
                     </div>
                     {# Charts #}
                     <div id="Charts" class="dropdown-container" style="display: none;">
-                      {% if use_hybrid3 %}
+                      {% if use_matd3 %}
                         <div class="row">
                           <div class="col-md-3">
                             <input type="submit" value="Add new"
                                    class="btn btn-theme-colored btn-lg"
                                    style="font-weight: bold;"
-                                   onclick="window.location='{{ hybrid3_add_data_url }}';">
+                                   onclick="window.location='{{ matd3_add_data_url }}';">
                           </div>
                           <div class="col-md-9">
                             <div class="input-group" style="margin-left:-30px;">
@@ -96,10 +96,10 @@
                                   Import existing data set
                                 </label>
                               </div>
-                              <input id="hybrid3-import-dataset-id"
+                              <input id="matd3-import-dataset-id"
                                      type="number" min="1" style="width: 100px;">
                               <div class="input-group-append">
-                                <button id="hybrid3-import-btn" type="button"
+                                <button id="matd3-import-btn" type="button"
                                         class="btn btn-theme-colored btn-lg"
                                         style="font-weight: bold;">
                                   Submit
@@ -328,13 +328,13 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <table>
                               <tbody>
-                                {% if not use_hybrid3 %}
+                                {% if not use_matd3 %}
                                   {{ render_field_curate(referenceform.kind) }}
                                 {% endif %}
                                  <div class="form-group row">
                                         <div class="col-sm-12">
                                           <label class="col-form-label">{{ referenceform.DOI.label }}<span style="color: red;">*</span>
-                                            {% if not use_hybrid3 %}
+                                            {% if not use_matd3 %}
                                               <input type="button" class="btn btn-theme-colored" id="fillReference" title="Auto fills paper fields using DOI." value="fetch" onclick="javascript:fetchDOI($('#DOI').val());"/>
                                             {% endif %}
                                              </label>
@@ -347,7 +347,7 @@
                             </table>
                                 <div data-toggle="author-fieldset-toggle" id="author-fieldset">
                                   <label class="col-form-label">{{ referenceform.authors.label }}</label> <span style="color: red;">*</span>
-                                  {% if not use_hybrid3 %}
+                                  {% if not use_matd3 %}
                                     <button type="button" class="btn btn-theme-colored" data-toggle="fieldset-add-row-author" data-target="#author-fieldset">+</button>
                                   {% endif %}
 
@@ -357,7 +357,7 @@
                                         <td style="padding-bottom: 1rem;">{{ name.firstName(class_='form-control',title=name.firstName.description,**{'data-toggle': 'tooltip'}) }}</td>
                                         <td style="padding-bottom: 1rem;">{{ name.middleName(class_='form-control',title=name.middleName.description,**{'data-toggle': 'tooltip'}) }}</td>
                                         <td style="padding-bottom: 1rem;">{{ name.lastName(class_='form-control',title=name.lastName.description,**{'data-toggle': 'tooltip'}) }}</td>
-                                        {% if not use_hybrid3 %}
+                                        {% if not use_matd3 %}
                                           <td style="padding-bottom: 1rem;"><button type="button" class="btn btn-theme-colored" data-toggle="fieldset-remove-row-authors" id="authors-{{loop.index0}}-remove">-</button></td>
                                         {% endif %}
                                     </tr>
@@ -415,11 +415,11 @@
 
     <script>
      document
-       .getElementById('hybrid3-import-btn')
+       .getElementById('matd3-import-btn')
        .addEventListener('click', function() {
          const dataset_id =
-           document.getElementById('hybrid3-import-dataset-id').value;
-         window.location.href='/hybrid3?pk=' + dataset_id;
+           document.getElementById('matd3-import-dataset-id').value;
+         window.location.href='/matd3?pk=' + dataset_id;
        });
     </script>
 
